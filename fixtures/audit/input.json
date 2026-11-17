@@ -1,0 +1,42 @@
+{
+  "factors": [
+    {
+      "id": "grid-2026",
+      "category": "electricity",
+      "unit": "kwh",
+      "kgco2e_per_unit": "0/1",
+      "valid_from": "2026-01-01",
+      "valid_to": null
+    },
+    {
+      "id": "gas-2026",
+      "category": "natural-gas",
+      "unit": "m3",
+      "kgco2e_per_unit": "0/1",
+      "valid_from": "2026-01-01",
+      "valid_to": null
+    }
+  ],
+  "activities": [
+    {
+      "id": "line-a",
+      "organization": "plant-a",
+      "date": "2026-06-01",
+      "scope": 1,
+      "category": "electricity",
+      "quantity": 1,
+      "unit": "kwh",
+      "factor_id": "grid-2026"
+    },
+    {
+      "id": "line-b",
+      "organization": "plant-a",
+      "date": "2026-06-01",
+      "scope": 1,
+      "category": "natural-gas",
+      "quantity": 0,
+      "unit": "m3",
+      "factor_id": "gas-2026"
+    }
+  ]
+}

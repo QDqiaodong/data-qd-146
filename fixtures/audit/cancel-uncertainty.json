@@ -1,0 +1,16 @@
+{
+  "variables": ["x"],
+  "constraints": [],
+  "quantities": [
+    {"activity_id": "line-a", "terms": {"x": 1}},
+    {"activity_id": "line-b", "terms": {"x": -1}}
+  ],
+  "rates": [],
+  "audit_costs": {"x": 0},
+  "precision": {
+    "overall": "0/1",
+    "groups": [
+      {"organization": "plant-a", "scope": 2, "tolerance": "0/1"}
+    ]
+  }
+}

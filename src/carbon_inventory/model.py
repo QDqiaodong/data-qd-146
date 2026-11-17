@@ -8,7 +8,7 @@ def day(v):
     try:return date.fromisoformat(v)
     except ValueError:raise ValueError('invalid ISO date')
 
-def analyze(data):
+def parse_inventory(data):
     require(data,'activities factors');factors={}
     for f in rows(data['factors'],1000):
         require(f,'id category unit kgco2e_per_unit valid_from valid_to')
@@ -27,4 +27,7 @@ def analyze(data):
         f=factors[fid]
         if f['category']!=category or f['unit']!=unit or d<f['start'] or (f['end'] and d>=f['end']):raise ValueError('factor does not match activity')
         activities.append({'id':aid,'organization':org,'date':d.isoformat(),'scope':scope,'category':category,'quantity':quantity,'unit':unit,'factor_id':fid,'rate':f['rate']})
-    return calculate(activities)
+    return factors,activities
+
+def analyze(data):
+    return calculate(parse_inventory(data)[1])

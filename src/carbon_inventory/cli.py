@@ -1,6 +1,7 @@
 DESCRIPTION='Traceable scope 1 and 2 greenhouse gas inventory with dated emission factors'
 import argparse, json, sqlite3, sys
 from pathlib import Path
+from .audit import run as run_audit
 from .common import read, save, save_bytes, render
 from .group import run_group
 from .model import analyze
@@ -9,6 +10,11 @@ from .registry import Store, adjudicate
 def run_source(source):
     data,digest=read(source)
     return {'schema_version':1,'source_sha256':digest,'result':analyze(data)}
+
+def run_uncertainty(source,spec):
+    data,digest=read(source)
+    spec_data,spec_digest=read(spec)
+    return run_audit(data,digest,spec_data,spec_digest)
 
 def run_registry(registry_path,batch_path):
     if registry_path.is_symlink():
@@ -26,9 +32,25 @@ def main():
     parser.add_argument('--batch',type=Path,help='revision batch JSON (registry mode)')
     parser.add_argument('--boundary',type=Path,help='dated ownership boundary JSON (group mode)')
     parser.add_argument('--root',help='consolidating organization (group mode)')
+    parser.add_argument('--uncertainty',type=Path,help='shared-risk audit spec (audit mode)')
     parser.add_argument('--output',type=Path,required=True)
     args=parser.parse_args()
     try:
+        if args.uncertainty is not None:
+            if args.registry is not None:
+                raise ValueError('--uncertainty cannot be combined with --registry')
+            if args.batch is not None:
+                raise ValueError('--uncertainty cannot be combined with --batch')
+            if args.boundary is not None or args.root is not None:
+                raise ValueError('--uncertainty cannot be combined with '
+                                 '--boundary/--root')
+            if args.source is None:
+                raise ValueError('--uncertainty requires --source')
+            if args.source.resolve()==args.uncertainty.resolve() or args.source.resolve()==args.output.resolve() or args.uncertainty.resolve()==args.output.resolve():
+                raise ValueError('source, uncertainty and output paths must differ')
+            report=run_uncertainty(args.source,args.uncertainty)
+            save(args.output,report)
+            print(json.dumps(report,sort_keys=True,ensure_ascii=False,allow_nan=False));return 0
         if args.boundary is not None or args.root is not None:
             if args.source is None:
                 raise ValueError('--boundary/--root require --source')

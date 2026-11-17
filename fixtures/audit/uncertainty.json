@@ -1,0 +1,19 @@
+{
+  "variables": ["x", "y", "z"],
+  "constraints": [],
+  "quantities": [
+    {"activity_id": "line-a", "terms": {"x": -1}},
+    {"activity_id": "line-b", "terms": {"x": 1}}
+  ],
+  "rates": [
+    {"factor_id": "grid-2026", "terms": {"y": "1/1"}},
+    {"factor_id": "gas-2026", "terms": {"z": "1/1"}}
+  ],
+  "audit_costs": {"x": 1, "y": 2, "z": 2},
+  "precision": {
+    "overall": "0/1",
+    "groups": [
+      {"organization": "plant-a", "scope": 1, "tolerance": "0/1"}
+    ]
+  }
+}

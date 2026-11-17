@@ -15,6 +15,9 @@ python3 -m venv .venv
 .venv/bin/python -m pip check
 # 遗留全量盘查（行为与 v1 完全一致）
 .venv/bin/carbon-inventory --source fixtures/input.json --output run/report.json
+# 集团合并：按时点所有权边界输出 Scope 1/2 两口径
+.venv/bin/carbon-inventory --source fixtures/group-input.json \
+  --boundary fixtures/group-boundary.json --root group-hq --output run/group.json
 # 电力证书修订台账：三代修订 + 旧批重放
 .venv/bin/carbon-inventory --registry run/ledger.db \
   --batch fixtures/registry/batch-01-foundation.json --output run/gen1.json
@@ -31,17 +34,27 @@ cmp run/gen1.json run/gen1-replay.json  # 重放逐字节一致，代数不回�
 本地已有 wheel 时，安装构建工具可加 `--no-index --find-links <公共wheel缓存目录>`。
 修改源码后重新安装。本仓不共享其他仓环境，不依赖 Docker、外部账号或持续服务。
 
-## 两种入口
+## 三种入口
 
-`--source` 与 `--registry` 互斥，`--output` 两种模式都必填。
+`--source` 与 `--registry` 互斥，`--boundary/--root` 只与 `--source` 搭配，`--output` 都必填。
 
 - 全量模式：`--source <input.json> --output <report.json>`，报告 `schema_version=1`，
   输入 JSON 最多 8MB，拒绝重复键、非有限数值和未定义字段；源字节 SHA256 随结果保留。
+  加入集团入口后该模式的输入校验与输出字节完全不变。
+- 集团合并：`--source <input.json> --boundary <boundary.json> --root <org>
+  --output <report.json>`，报告 `schema_version=3`。边界只含 `relationships`，
+  每条 `{parent,child,share,operational_control,valid_from,valid_to}`，share 为 0..1 的
+  `n/d`，区间左闭右开、`valid_to` 可为 null。全时间轴（含无活动日期）检查每个孩子的直接
+  持股总和 ≤1、同对组织不重叠、任何有效图无环；组织 ≤10000、关系 ≤50000、活动 ≤20000。
+  每笔活动先按日期取唯一有效边切片，再同时求两个口径：equity 为 root 到活动组织所有有效
+  路径 share 乘积之和（汇聚路径相加），control 为存在全程受控路径时计完整排放、否则 0
+  （同一组织只计一次）。输出逐活动比例/金额、按 scope 的两口径合计和未归属活动清单，
+  不枚举路径；全程精确 Fraction，多路径图按切片拓扑遍历，不随路径条数指数增长。
 - 台账模式：`--registry <ledger.db> --batch <batch.json> --output <report.json>`，
   报告 `schema_version=2`。数据库首次使用为空、`generation=0`；DB、批次、输出三路径互异，
   数据库与输出均拒绝符号链接。
 
-输入 JSON（含批次）最多 8MB，拒绝重复键、非有限数值和未定义字段。
+输入 JSON（含批次与边界）最多 8MB，拒绝重复键、非有限数值和未定义字段。
 输出是可独立读取的 JSON；成功后原子替换，输入/计算失败退出 2 并保留旧报告。
 同输入重跑不累加。测试使用临时目录，运行产物在忽略的 run/。
 
@@ -67,7 +80,10 @@ cmp run/gen1.json run/gen1-replay.json  # 重放逐字节一致，代数不回�
 
 src/carbon_inventory/model.py 为全量模式业务模型，inventory.py 为其分组核算；
 registry.py 负责台账实体检修、批次身份、SQLite 世代存储与报告构建，
-allocation.py 为精确四层最小费用流分配，common.py 提供受限 JSON 及报告发布，
-cli.py 衔接两条数据链路。fixtures 为明确自制样例，代码与样例采用 MIT 许可。
+allocation.py 为精确四层最小费用流分配，boundary.py 为严格边界解析、全时间轴校验与
+活动日期切片，consolidation.py 在单个切片上精确求多路径 equity 与去重 control，
+group.py 组合集团报告，common.py 提供受限 JSON 及报告发布，cli.py 衔接三条数据链路。
+集团模式的设计取舍（预建切片 vs 惰性折叠）见数据契约第 3.5 节。
+fixtures 为明确自制样例，代码与样例采用 MIT 许可。
 本工具不提供气体级 GWP、价值链 Scope 3、抵扣、边界核证、货币因素或官方排放因子，
 也不声称合规盘查；样例虚构，单位换算需提前纳入因子定义。

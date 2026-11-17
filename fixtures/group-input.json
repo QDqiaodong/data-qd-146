@@ -1,0 +1,62 @@
+{
+  "factors": [
+    {
+      "id": "grid-2026",
+      "category": "electricity",
+      "unit": "kwh",
+      "kgco2e_per_unit": "2/5",
+      "valid_from": "2026-01-01",
+      "valid_to": null
+    },
+    {
+      "id": "gas-2026",
+      "category": "natural-gas",
+      "unit": "m3",
+      "kgco2e_per_unit": "19/10",
+      "valid_from": "2026-01-01",
+      "valid_to": null
+    }
+  ],
+  "activities": [
+    {
+      "id": "a-winter-power",
+      "organization": "plant-a",
+      "date": "2026-02-01",
+      "scope": 2,
+      "category": "electricity",
+      "quantity": 1000,
+      "unit": "kwh",
+      "factor_id": "grid-2026"
+    },
+    {
+      "id": "a-summer-power",
+      "organization": "plant-a",
+      "date": "2026-06-01",
+      "scope": 2,
+      "category": "electricity",
+      "quantity": 600,
+      "unit": "kwh",
+      "factor_id": "grid-2026"
+    },
+    {
+      "id": "b-summer-gas",
+      "organization": "plant-b",
+      "date": "2026-06-01",
+      "scope": 1,
+      "category": "natural-gas",
+      "quantity": 100,
+      "unit": "m3",
+      "factor_id": "gas-2026"
+    },
+    {
+      "id": "c-summer-gas",
+      "organization": "plant-c",
+      "date": "2026-06-01",
+      "scope": 1,
+      "category": "natural-gas",
+      "quantity": 10,
+      "unit": "m3",
+      "factor_id": "gas-2026"
+    }
+  ]
+}

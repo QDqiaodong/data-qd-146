@@ -2,6 +2,7 @@ DESCRIPTION='Traceable scope 1 and 2 greenhouse gas inventory with dated emissio
 import argparse, json, sqlite3, sys
 from pathlib import Path
 from .common import read, save, save_bytes, render
+from .group import run_group
 from .model import analyze
 from .registry import Store, adjudicate
 
@@ -20,13 +21,29 @@ def run_registry(registry_path,batch_path):
 def main():
     parser=argparse.ArgumentParser(description=DESCRIPTION)
     mode=parser.add_mutually_exclusive_group(required=True)
-    mode.add_argument('--source',type=Path,help='legacy full-inventory JSON input')
+    mode.add_argument('--source',type=Path,help='full-inventory JSON input')
     mode.add_argument('--registry',type=Path,help='SQLite ledger database path')
     parser.add_argument('--batch',type=Path,help='revision batch JSON (registry mode)')
+    parser.add_argument('--boundary',type=Path,help='dated ownership boundary JSON (group mode)')
+    parser.add_argument('--root',help='consolidating organization (group mode)')
     parser.add_argument('--output',type=Path,required=True)
     args=parser.parse_args()
     try:
+        if args.boundary is not None or args.root is not None:
+            if args.source is None:
+                raise ValueError('--boundary/--root require --source')
+            if args.boundary is None or args.root is None:
+                raise ValueError('--boundary and --root must be supplied together')
+            if args.batch is not None:
+                raise ValueError('--batch requires --registry')
+            if args.source.resolve()==args.output.resolve() or args.boundary.resolve()==args.output.resolve() or args.source.resolve()==args.boundary.resolve():
+                raise ValueError('source, boundary and output paths must differ')
+            report=run_group(args.source,args.boundary,args.root)
+            save(args.output,report)
+            print(json.dumps(report,sort_keys=True,ensure_ascii=False,allow_nan=False));return 0
         if args.source is not None:
+            if args.batch is not None:
+                raise ValueError('--batch requires --registry')
             if args.source.resolve()==args.output.resolve():
                 raise ValueError('input and output must differ')
             report=run_source(args.source)

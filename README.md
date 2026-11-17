@@ -25,6 +25,11 @@ python3 -m venv .venv
   --uncertainty fixtures/audit/uncertainty-impossible.json --output run/audit-impossible.json
 .venv/bin/carbon-inventory --source fixtures/audit/cancel-input.json \
   --uncertainty fixtures/audit/cancel-uncertainty.json --output run/audit-cancel.json
+# 双向受控舍入披露：精确分数表同时满足指定行列总额（含无解割证据与锁）
+.venv/bin/carbon-inventory --source fixtures/rounding/half-input.json \
+  --rounding fixtures/rounding/half-rounding.json --output run/round-half.json
+.venv/bin/carbon-inventory --source fixtures/rounding/cut-input.json \
+  --rounding fixtures/rounding/cut-rounding.json --output run/round-cut.json
 # 电力证书修订台账：三代修订 + 旧批重放
 .venv/bin/carbon-inventory --registry run/ledger.db \
   --batch fixtures/registry/batch-01-foundation.json --output run/gen1.json
@@ -41,10 +46,10 @@ cmp run/gen1.json run/gen1-replay.json  # 重放逐字节一致，代数不回�
 本地已有 wheel 时，安装构建工具可加 `--no-index --find-links <公共wheel缓存目录>`。
 修改源码后重新安装。本仓不共享其他仓环境，不依赖 Docker、外部账号或持续服务。
 
-## 四种入口
+## 五种入口
 
-`--source` 与 `--registry` 互斥，`--boundary/--root` 与 `--uncertainty` 都只与 `--source`
-搭配且两者互斥，`--output` 都必填。
+`--source` 与 `--registry` 互斥，`--boundary/--root`、`--uncertainty` 与 `--rounding`
+都只与 `--source` 搭配且彼此互斥，`--output` 都必填。
 
 - 全量模式：`--source <input.json> --output <report.json>`，报告 `schema_version=1`，
   输入 JSON 最多 8MB，拒绝重复键、非有限数值和未定义字段；源字节 SHA256 随结果保留。
@@ -65,6 +70,16 @@ cmp run/gen1.json run/gen1-replay.json  # 重放逐字节一致，代数不回�
   Fraction 区间；任何可行状态出现负数量或负率即拒绝，Ω 为空则输出 `infeasible`。
   策略在尚不知道真实状态时按后验最小化最坏累计核查成本，已满足精度立即停止、不可达答复
   不计入、约束确定的变量不付费；无法达到精度时输出 `impossible` 与完整反例。
+- 双向受控舍入披露：`--source <input.json> --rounding <spec.json>
+  --output <report.json>`，报告 `schema_version=5`。源沿用 v1 校验并额外要求活动 ID
+  唯一；先按组织为行、`(scope,category)` 为列汇总 `quantity×rate` 的精确 Fraction，
+  取实际行列的笛卡尔积（缺失单元为 0），最多 100 行、100 列、10 000 单元。规格恰含
+  `rows/columns/locks`：行列总额各为其精确边际和的 floor/ceil（0..10^30 整数，布尔拒绝）
+  且恰好覆盖源坐标，锁把单元固定为 floor/ceil。每单元只能取精确值的 floor/ceil 且同时
+  满足全部行列总额；先最小化全表绝对误差、再取字典序最小舍入向量，全程精确最小费用流，
+  不逐行贪心、不枚举组合、不按 kg 展开。无解时按 bounds→balance→cut 固定顺序给出可回算
+  证据（最大流残余割的 A/B、cut_capacity、deficit），已验证无解难正常退出 0；发布前由
+  独立最大流与负环判定回代全部边界、边际、误差与证据。
 - 台账模式：`--registry <ledger.db> --batch <batch.json> --output <report.json>`，
   报告 `schema_version=2`。数据库首次使用为空、`generation=0`；DB、批次、输出三路径互异，
   数据库与输出均拒绝符号链接。
@@ -100,10 +115,14 @@ minimax 策略（直接代价函数与预算判定两种设计），audit.py 组
 registry.py 负责台账实体检修、批次身份、SQLite 世代存储与报告构建，
 allocation.py 为精确四层最小费用流分配，boundary.py 为严格边界解析、全时间轴校验与
 活动日期切片，consolidation.py 在单个切片上精确求多路径 equity 与去重 control，
-group.py 组合集团报告，common.py 提供受限 JSON 及报告发布，cli.py 衔接三条数据链路。
+group.py 组合集团报告，rounding.py 严格解析舍入规格、做精确汇总、最大流可行性/割证据与
+复合费用最小费用流舍入，round_verify.py 用独立最大流与负环判定在发布前回代全部单元、
+边际、误差与不可行证据，common.py 提供受限 JSON 及报告发布，cli.py 衔接数据链路。
 集团模式的设计取舍（预建切片 vs 惰性折叠）见数据契约第 3.5 节；
-共享风险核查的非预知性、两种策略设计与回代发布见第 4.7 节。
-fixtures 为明确自制样例（`fixtures/audit/` 为 v4 的共享风险、不可能与相关性相杀样例），
+共享风险核查的非预知性、两种策略设计与回代发布见第 4.7 节；
+双向受控舍入的残差网络、割证据与两层目标见第 5 节。
+fixtures 为明确自制样例（`fixtures/audit/` 为 v4 的共享风险、不可能与相关性相杀样例，
+`fixtures/rounding/` 为 v5 的并列字典序、反贪心、锁与割反例样例），
 代码与样例采用 MIT 许可。
 本工具不提供气体级 GWP、价值链 Scope 3、抵扣、边界核证、货币因素或官方排放因子，
 也不声称合规盘查；样例虚构，单位换算需提前纳入因子定义。

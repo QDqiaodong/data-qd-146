@@ -1,0 +1,13 @@
+{
+  "rows": [
+    {"organization": "plant-a", "total": 616},
+    {"organization": "plant-b", "total": 239},
+    {"organization": "plant-c", "total": 10}
+  ],
+  "columns": [
+    {"scope": 1, "category": "natural-gas", "total": 230},
+    {"scope": 1, "category": "process", "total": 33},
+    {"scope": 2, "category": "electricity", "total": 602}
+  ],
+  "locks": []
+}

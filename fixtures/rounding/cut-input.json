@@ -1,0 +1,70 @@
+{
+  "factors": [
+    {
+      "id": "f-c1",
+      "category": "c1",
+      "unit": "u1",
+      "kgco2e_per_unit": "1/2",
+      "valid_from": "2026-01-01",
+      "valid_to": null
+    },
+    {
+      "id": "f-c2",
+      "category": "c2",
+      "unit": "u2",
+      "kgco2e_per_unit": "1/2",
+      "valid_from": "2026-01-01",
+      "valid_to": null
+    },
+    {
+      "id": "f-c3",
+      "category": "c3",
+      "unit": "u3",
+      "kgco2e_per_unit": "1/2",
+      "valid_from": "2026-01-01",
+      "valid_to": null
+    }
+  ],
+  "activities": [
+    {
+      "id": "a1",
+      "organization": "r1",
+      "date": "2026-06-01",
+      "scope": 1,
+      "category": "c1",
+      "quantity": 1,
+      "unit": "u1",
+      "factor_id": "f-c1"
+    },
+    {
+      "id": "a2",
+      "organization": "r2",
+      "date": "2026-06-01",
+      "scope": 1,
+      "category": "c1",
+      "quantity": 1,
+      "unit": "u1",
+      "factor_id": "f-c1"
+    },
+    {
+      "id": "a3",
+      "organization": "r3",
+      "date": "2026-06-01",
+      "scope": 1,
+      "category": "c2",
+      "quantity": 1,
+      "unit": "u2",
+      "factor_id": "f-c2"
+    },
+    {
+      "id": "a4",
+      "organization": "r3",
+      "date": "2026-06-01",
+      "scope": 1,
+      "category": "c3",
+      "quantity": 1,
+      "unit": "u3",
+      "factor_id": "f-c3"
+    }
+  ]
+}

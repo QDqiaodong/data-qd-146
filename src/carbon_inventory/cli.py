@@ -6,6 +6,7 @@ from .common import read, save, save_bytes, render
 from .group import run_group
 from .model import analyze
 from .registry import Store, adjudicate
+from .rounding import run as run_rounding
 
 def run_source(source):
     data,digest=read(source)
@@ -15,6 +16,11 @@ def run_uncertainty(source,spec):
     data,digest=read(source)
     spec_data,spec_digest=read(spec)
     return run_audit(data,digest,spec_data,spec_digest)
+
+def run_rounding_mode(source,spec):
+    data,digest=read(source)
+    spec_data,spec_digest=read(spec)
+    return run_rounding(data,digest,spec_data,spec_digest)
 
 def run_registry(registry_path,batch_path):
     if registry_path.is_symlink():
@@ -33,9 +39,26 @@ def main():
     parser.add_argument('--boundary',type=Path,help='dated ownership boundary JSON (group mode)')
     parser.add_argument('--root',help='consolidating organization (group mode)')
     parser.add_argument('--uncertainty',type=Path,help='shared-risk audit spec (audit mode)')
+    parser.add_argument('--rounding',type=Path,help='controlled rounding disclosure spec (rounding mode)')
     parser.add_argument('--output',type=Path,required=True)
     args=parser.parse_args()
     try:
+        if args.rounding is not None:
+            if args.registry is not None:
+                raise ValueError('--rounding cannot be combined with --registry')
+            if args.batch is not None:
+                raise ValueError('--rounding cannot be combined with --batch')
+            if args.boundary is not None or args.root is not None:
+                raise ValueError('--rounding cannot be combined with --boundary/--root')
+            if args.uncertainty is not None:
+                raise ValueError('--rounding cannot be combined with --uncertainty')
+            if args.source is None:
+                raise ValueError('--rounding requires --source')
+            if args.source.resolve()==args.rounding.resolve() or args.source.resolve()==args.output.resolve() or args.rounding.resolve()==args.output.resolve():
+                raise ValueError('source, rounding and output paths must differ')
+            report=run_rounding_mode(args.source,args.rounding)
+            save(args.output,report)
+            print(json.dumps(report,sort_keys=True,ensure_ascii=False,allow_nan=False));return 0
         if args.uncertainty is not None:
             if args.registry is not None:
                 raise ValueError('--uncertainty cannot be combined with --registry')

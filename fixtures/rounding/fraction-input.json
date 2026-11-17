@@ -1,0 +1,70 @@
+{
+  "factors": [
+    {
+      "id": "stationary-tenth",
+      "category": "stationary",
+      "unit": "u1",
+      "kgco2e_per_unit": "1/10",
+      "valid_from": "2026-01-01",
+      "valid_to": null
+    },
+    {
+      "id": "electricity-fifth",
+      "category": "electricity",
+      "unit": "u2",
+      "kgco2e_per_unit": "1/5",
+      "valid_from": "2026-01-01",
+      "valid_to": null
+    },
+    {
+      "id": "electricity-tenth",
+      "category": "electricity",
+      "unit": "u2",
+      "kgco2e_per_unit": "1/10",
+      "valid_from": "2026-01-01",
+      "valid_to": null
+    }
+  ],
+  "activities": [
+    {
+      "id": "a1",
+      "organization": "oa",
+      "date": "2026-06-01",
+      "scope": 1,
+      "category": "stationary",
+      "quantity": 9,
+      "unit": "u1",
+      "factor_id": "stationary-tenth"
+    },
+    {
+      "id": "a2",
+      "organization": "oa",
+      "date": "2026-06-01",
+      "scope": 2,
+      "category": "electricity",
+      "quantity": 8,
+      "unit": "u2",
+      "factor_id": "electricity-tenth"
+    },
+    {
+      "id": "a3",
+      "organization": "ob",
+      "date": "2026-06-01",
+      "scope": 1,
+      "category": "stationary",
+      "quantity": 8,
+      "unit": "u1",
+      "factor_id": "stationary-tenth"
+    },
+    {
+      "id": "a4",
+      "organization": "ob",
+      "date": "2026-06-01",
+      "scope": 2,
+      "category": "electricity",
+      "quantity": 1,
+      "unit": "u2",
+      "factor_id": "electricity-tenth"
+    }
+  ]
+}

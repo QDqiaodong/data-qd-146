@@ -1,0 +1,11 @@
+{
+  "rows": [
+    {"organization": "oa", "total": 1},
+    {"organization": "ob", "total": 1}
+  ],
+  "columns": [
+    {"scope": 1, "category": "stationary", "total": 1},
+    {"scope": 2, "category": "electricity", "total": 1}
+  ],
+  "locks": []
+}

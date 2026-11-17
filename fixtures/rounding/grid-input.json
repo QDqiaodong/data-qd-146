@@ -1,0 +1,100 @@
+{
+  "factors": [
+    {
+      "id": "grid-2026",
+      "category": "electricity",
+      "unit": "kwh",
+      "kgco2e_per_unit": "2/5",
+      "valid_from": "2026-01-01",
+      "valid_to": null
+    },
+    {
+      "id": "gas-2026",
+      "category": "natural-gas",
+      "unit": "m3",
+      "kgco2e_per_unit": "19/10",
+      "valid_from": "2026-01-01",
+      "valid_to": null
+    },
+    {
+      "id": "process-2026",
+      "category": "process",
+      "unit": "t",
+      "kgco2e_per_unit": "7/3",
+      "valid_from": "2026-01-01",
+      "valid_to": null
+    }
+  ],
+  "activities": [
+    {
+      "id": "a-power",
+      "organization": "plant-a",
+      "date": "2026-06-01",
+      "scope": 2,
+      "category": "electricity",
+      "quantity": 1001,
+      "unit": "kwh",
+      "factor_id": "grid-2026"
+    },
+    {
+      "id": "a-gas",
+      "organization": "plant-a",
+      "date": "2026-06-01",
+      "scope": 1,
+      "category": "natural-gas",
+      "quantity": 101,
+      "unit": "m3",
+      "factor_id": "gas-2026"
+    },
+    {
+      "id": "a-process",
+      "organization": "plant-a",
+      "date": "2026-06-01",
+      "scope": 1,
+      "category": "process",
+      "quantity": 10,
+      "unit": "t",
+      "factor_id": "process-2026"
+    },
+    {
+      "id": "b-power-1",
+      "organization": "plant-b",
+      "date": "2026-06-01",
+      "scope": 2,
+      "category": "electricity",
+      "quantity": 500,
+      "unit": "kwh",
+      "factor_id": "grid-2026"
+    },
+    {
+      "id": "b-power-2",
+      "organization": "plant-b",
+      "date": "2026-07-01",
+      "scope": 2,
+      "category": "electricity",
+      "quantity": 3,
+      "unit": "kwh",
+      "factor_id": "grid-2026"
+    },
+    {
+      "id": "b-gas",
+      "organization": "plant-b",
+      "date": "2026-06-01",
+      "scope": 1,
+      "category": "natural-gas",
+      "quantity": 20,
+      "unit": "m3",
+      "factor_id": "gas-2026"
+    },
+    {
+      "id": "c-process",
+      "organization": "plant-c",
+      "date": "2026-06-01",
+      "scope": 1,
+      "category": "process",
+      "quantity": 4,
+      "unit": "t",
+      "factor_id": "process-2026"
+    }
+  ]
+}

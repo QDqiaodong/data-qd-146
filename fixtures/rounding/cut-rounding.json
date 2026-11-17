@@ -1,0 +1,13 @@
+{
+  "rows": [
+    {"organization": "r1", "total": 1},
+    {"organization": "r2", "total": 1},
+    {"organization": "r3", "total": 1}
+  ],
+  "columns": [
+    {"scope": 1, "category": "c1", "total": 1},
+    {"scope": 1, "category": "c2", "total": 1},
+    {"scope": 1, "category": "c3", "total": 1}
+  ],
+  "locks": []
+}

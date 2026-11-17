@@ -1,8 +1,8 @@
-# 组织温室气体盘查数据契约 v3
+# 组织温室气体盘查数据契约 v5
 
-v3 在 v1 的一次性全量盘查与 v2 的「电力证书修订台账」之外，新增按持有时点把集团
-Scope 1/2 合并的口径。三种入口互斥；`--source/--output` 的原始输入、校验严格度和
-报告字节行为完全不变（v1 报告仍为 `schema_version=1`）。
+v5 在 v1 的一次性全量盘查、v2 的「电力证书修订台账」、v3 的持有时点集团合并与 v4 的
+共享风险自适应核查之外，新增双向受控舍入披露。五种入口互斥；`--source/--output` 的原始
+输入、校验严格度和报告字节行为完全不变（v1..v4 报告仍为各自的 `schema_version`）。
 
 ## 1. 遗留全量模式（v1，保持不变）
 
@@ -342,3 +342,98 @@ minimax 递归（不用掩码、不引用报告代码），在固定实例与 25
 不可达答复、免费无关变量、分数微差、共享因子、跨组目标、`null` 成本、10 变量全枚举、
 以及 v1/v2/v3 回归用例。10 变量上限允许一次枚举全部有限状态，策略正确性由逐后验对照
 保证，而不是由规模论证代替。
+
+## 5. 双向受控舍入披露（v5 新增）
+
+`carbon-inventory --source <input.json> --rounding <spec.json> --output <report.json>`
+
+`--rounding` 只与 `--source` 配对，与 `--registry`、`--batch`、`--boundary`、
+`--root`、`--uncertainty` 全部互斥。source、rounding、output 三个路径必须互异；
+两个输入共用同一受限解析器（8MB、拒绝重复键、拒绝非有限数值、未知字段拒绝），输出
+沿用符号链接防护与原子替换。v1..v4 各模式的输入、错误与输出字节都不因本模式改变。
+
+### 5.1 精确表
+
+`--source` 沿用 v1 的 activities/factors 校验（字段、类别、单位、半开日期、因子匹配、
+数量 0..10^12），本模式额外要求活动 ID 唯一。未被任何活动引用的因子仍须通过原有校验。
+每笔贡献为 `quantity × rate` 的精确 Fraction，按行 `organization` 与列
+`(scope, category)` 汇总；同一单元可由多笔活动贡献，但重复活动 ID 拒绝。行、列只取
+源活动实际出现的坐标，取其笛卡尔积，缺失单元精确值为 0。行按组织字符串、列按
+`(scope 数值, category 字符串)` 元组排序，与活动输入顺序无关；上限 100 行、100 列、
+10 000 单元。
+
+### 5.2 舍入规格
+
+`--rounding` 严格且仅含 `rows`、`columns`、`locks`：
+
+- `rows` 每项恰为 `{organization,total}`，无重复且恰好覆盖源的每个组织；`columns`
+  每项恰为 `{scope,category,total}`，无重复且恰好覆盖源的每个 `(scope,category)`。
+  `total` 为 0..10^30 的整数（布尔拒绝），并且必须等于该边际精确和的 floor 或 ceil。
+- `locks` 每项恰为 `{organization,scope,category,rounding}`，每单元至多一项，坐标必须
+  引用已出现的行、列（笛卡尔积中的零单元也合法），`rounding` 只能是 `floor` 或
+  `ceil`。rows/columns 至多各 100 项，locks 至多 10 000 项。
+- floor/ceil 按数学定义；精确值为整数时两个方向相同，锁任一方向均合法。
+- 空活动时 rows、columns、locks 必须全部为空，得到空表与零误差。
+
+### 5.3 可行性与不可行证据
+
+锁把单元的下/上界 L/U 固定到指定方向；无锁非整数单元的 L=floor、U=ceil 且只差 1，
+整数与零单元的 L=U。令行残差 `r_i = 行目标 − Σ_j L_ij`、列残差
+`c_j = 列目标 − Σ_i L_ij`，判定严格按以下顺序：
+
+1. **bounds**：先按行顺序、再按列顺序检查 `0 ≤ 残差 ≤ 该线 Σ(U−L)`；首个违例输出
+   `{kind:"bounds",axis,coordinate,residual,capacity}`，coordinate 分别为
+   `{organization}` 或 `{scope,category}`。
+2. **balance**：若 `Σr ≠ Σc`，输出
+   `{kind:"balance",row_required,column_required}`。
+3. **cut**：否则建立残余网络（源→行容量 r、行→列容量 U−L、列→汇容量 c）跑一次最大流；
+   流值不足时，取最大流残余图从源可达的行集 A、列集 B（含关系最小的最小割源侧，与增广
+   顺序无关），输出 `{kind:"cut",rows,columns,required,cut_capacity,deficit}`，其中
+   `cut_capacity = Σ_{i∉A} r_i + Σ_{i∈A,j∉B}(U_ij−L_ij) + Σ_{j∈B} c_j`、
+   `deficit = required − cut_capacity > 0`，rows 为排序后的组织 ID、columns 为排序后的
+   `{scope,category}`。这些数字全部从本次精确表与锁回算，不能用未上锁的 floor 边界代替。
+
+### 5.4 精确最优舍入
+
+可行时每个单元只取其 floor 或 ceil，并同时满足全部行列目标。在所有可行整数表中：
+
+1. 最小化全表 `Σ |整数值 − 精确值|`（精确 Fraction）；
+2. 在误差并列的表中，取按 cells 顺序（`organization,scope,category`，含零与锁定单元）
+   展开的整数向量字典序最小者。
+
+实现为一次精确最小费用流：把每个自由单元（非整数且未锁）建成容量 1 的行→列边，单元
+取 ceil 相对取 floor 的边际误差为 `1 − 2f`（f 为该单元的小数部分），先乘统一公分母
+转为整数，再整体加常数使边费用非负（每条源→汇路径恰好经过一条单元边，常数平移不改变
+最优解）；费用第二分量是按行列序定位的单位位向量，因此一次 Dijkstra（Johnson 位势）
+加阻塞流同时确定两层目标，全程 int/Fraction，无浮点、无逐行最大余数、无独立四舍五入、
+不枚举 2^n 组合、不按 kg 单位展开，迭代次数只取决于图结构。
+
+### 5.5 报告（`schema_version=5`）
+
+顶层恰为 `schema_version`、`source_sha256`、`rounding_sha256`、`status`、`cells`、
+`rows`、`columns`、`objective`、`obstruction`；两个 SHA 都针对原始输入文件字节。
+
+- `cells` 每项恰为 `{organization,scope,category,exact,lower,upper,rounded}`，完整保留
+  零单元并按 `(organization,scope,category)` 排序；`exact` 为约分 Fraction 字符串，
+  `lower/upper` 为考虑锁后的整数边界。
+- `rows` 每项恰为 `{organization,exact,target,actual}`，按组织排序；`columns` 每项恰为
+  `{scope,category,exact,target,actual}`，按 `(scope,category)` 排序。
+- 可行：`status="feasible"`，`objective={absolute_error,vector}`（误差为约分 Fraction
+  字符串，vector 按 cells 顺序且包含零），`obstruction=null`，rounded/actual 为整数。
+- 不可行：`status="infeasible"`，`rounded/actual/objective` 为 null，并给出 5.3 的
+  obstruction；已验证的不可行报告正常退出 0。校验失败退出 2 且保留旧输出。
+
+### 5.6 回代发布与测试对照
+
+发布前 `round_verify.verify_rounding` 用共享严格校验器重新解析两份输入、重建精确表与
+锁后 L/U，并用独立的 Edmonds-Karp 最大流重判可行性、独立重算可达割与 deficit；对可行
+报告再以独立的 SPFA 负环判定（手工复合费用，不引用生产求解器）证明发表的流在误差与
+字典序两层都最优，同时逐单元回算边界、逐边际回算 actual、重算绝对误差。任何不符抛
+`AssertionError`，进程退出 2，旧输出保持不变。
+
+`tests/test_rounding.py` 的 `Oracle` 对小表独立枚举全部 floor/ceil 组合（含锁），直接
+核对行列目标、精确误差与规范向量，并独立回算 bounds/balance/cut 三类证据；覆盖全 1/2
+并列字典序、9/10 与 4/5 反贪心矩阵、floor 锁改判、3×3 割反例（零格不虚增容量）、分数
+微差、整数/零单元、输入重排、布尔与边界拒绝、空源、CLI 互斥与旧模式回归，以及 10 000
+单元、含 10^12 量级整数部分的上限样例，证明实现不依赖组合枚举或单位展开。
+

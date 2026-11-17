@@ -31,13 +31,19 @@ def read(path):
     data=json.loads(raw,object_pairs_hook=unique,parse_constant=invalid)
     return data,hashlib.sha256(raw).hexdigest()
 
-def save(path,report):
+def render(report):
+    return (json.dumps(report,sort_keys=True,ensure_ascii=False,allow_nan=False,indent=2)+'\n').encode('utf-8')
+
+def save_bytes(path,blob):
     dest=Path(path)
     if dest.is_symlink():raise ValueError('output cannot be a symlink')
     dest.parent.mkdir(parents=True,exist_ok=True);temp=None
     try:
-        with tempfile.NamedTemporaryFile(mode='w',encoding='utf-8',dir=dest.parent,delete=False) as stream:
-            temp=stream.name;json.dump(report,stream,sort_keys=True,ensure_ascii=False,allow_nan=False,indent=2);stream.write('\n')
+        with tempfile.NamedTemporaryFile(mode='wb',dir=dest.parent,delete=False) as stream:
+            temp=stream.name;stream.write(blob)
         os.replace(temp,dest)
     finally:
         if temp and os.path.exists(temp):os.unlink(temp)
+
+def save(path,report):
+    save_bytes(path,render(report))

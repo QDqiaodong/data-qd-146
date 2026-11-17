@@ -1,0 +1,33 @@
+{
+  "batch_id": "2026-02-add-plant-b",
+  "base_generation": 1,
+  "changes": [
+    {
+      "kind": "activity",
+      "id": "plant-b-power",
+      "value": {
+        "id": "plant-b-power",
+        "organization": "plant-b",
+        "date": "2026-06-01",
+        "scope": 2,
+        "category": "electricity",
+        "quantity": 1000,
+        "unit": "kwh",
+        "factor_id": "grid-2026",
+        "residual_factor_id": "residual-2026"
+      }
+    },
+    {
+      "kind": "certificate",
+      "id": "eac-2026",
+      "value": {
+        "id": "eac-2026",
+        "eligible_organizations": ["plant-a", "plant-b"],
+        "valid_from": "2026-01-01",
+        "valid_to": null,
+        "quantity": 2000,
+        "kgco2e_per_kwh": "0/1"
+      }
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "batch_id": "2026-01-foundation",
+  "base_generation": 0,
+  "changes": [
+    {
+      "kind": "factor",
+      "id": "grid-2026",
+      "value": {
+        "id": "grid-2026",
+        "category": "electricity",
+        "unit": "kwh",
+        "kgco2e_per_unit": "2/5",
+        "valid_from": "2026-01-01",
+        "valid_to": null
+      }
+    },
+    {
+      "kind": "factor",
+      "id": "residual-2026",
+      "value": {
+        "id": "residual-2026",
+        "category": "electricity",
+        "unit": "kwh",
+        "kgco2e_per_unit": "7/10",
+        "valid_from": "2026-01-01",
+        "valid_to": null
+      }
+    },
+    {
+      "kind": "factor",
+      "id": "gas-2026",
+      "value": {
+        "id": "gas-2026",
+        "category": "natural-gas",
+        "unit": "m3",
+        "kgco2e_per_unit": "19/10",
+        "valid_from": "2026-01-01",
+        "valid_to": null
+      }
+    },
+    {
+      "kind": "activity",
+      "id": "plant-a-power",
+      "value": {
+        "id": "plant-a-power",
+        "organization": "plant-a",
+        "date": "2026-06-01",
+        "scope": 2,
+        "category": "electricity",
+        "quantity": 1000,
+        "unit": "kwh",
+        "factor_id": "grid-2026",
+        "residual_factor_id": "residual-2026"
+      }
+    },
+    {
+      "kind": "activity",
+      "id": "boiler-gas",
+      "value": {
+        "id": "boiler-gas",
+        "organization": "plant-a",
+        "date": "2026-06-01",
+        "scope": 1,
+        "category": "natural-gas",
+        "quantity": 100,
+        "unit": "m3",
+        "factor_id": "gas-2026"
+      }
+    },
+    {
+      "kind": "certificate",
+      "id": "eac-2026",
+      "value": {
+        "id": "eac-2026",
+        "eligible_organizations": ["plant-a"],
+        "valid_from": "2026-01-01",
+        "valid_to": null,
+        "quantity": 400,
+        "kgco2e_per_kwh": "0/1"
+      }
+    }
+  ]
+}
